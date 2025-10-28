@@ -1,9 +1,7 @@
-# evaluator/evaluator.py
-
 import torch
 from tqdm import tqdm
 import logging
-import numpy as np # 导入 numpy 用于计算平均值
+import numpy as np
 from trainer.trainer import setup_pruner
 
 def evaluate_performance(pruner, config, mllm, data_loader, logger):
@@ -30,7 +28,7 @@ def evaluate_performance(pruner, config, mllm, data_loader, logger):
     eval_samples = test_samples[:num_samples_to_eval]
     logger.info(f"Evaluating on {len(eval_samples)} samples.")
 
-    # --- 新增：用于计算准确率和压缩率的列表 ---
+    #用于计算准确率和压缩率的列表 ---
     accuracies = []
     compression_ratios = []
 
