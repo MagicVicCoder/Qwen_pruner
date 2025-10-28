@@ -4,7 +4,7 @@ from datetime import datetime
 
 # --- Global Settings ---
 # Corrected the trailing space in the endpoint URL
-os.environ["HF_HOME"] = "/data/huggingface_cache"
+os.environ["HF_HOME"] = "/Desktop/data/huggingface_cache"
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["CUDA_VISIBLE_DEVICES"] = "3,5,6"
 
