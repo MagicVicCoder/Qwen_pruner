@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-from ..pruner.mlp_pruner import MLPPruner
+#from ..pruner.mlp_pruner import MLPPruner
+from pruner.mlp_pruner import MLPPruner # 绝对导入
 import numpy as np
 import logging
 
