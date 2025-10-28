@@ -1,7 +1,8 @@
 import torch
 from tqdm import tqdm
 import logging
-from ..trainer.trainer import setup_pruner
+#from ..trainer.trainer import setup_pruner
+from trainer.trainer import setup_pruner # 绝对导入
 
 def evaluate_performance(policy_or_pruner, config, mllm, data_loader, logger):
     """
