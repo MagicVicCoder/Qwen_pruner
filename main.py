@@ -50,13 +50,13 @@ def main():
     logger.info(f"MLLM '{config.MODEL_ID}' initialized.")
 
     # 3. Setup MLP Pruner (Replaces RL Environment and Policy setup)
-    logger.info("--- 3. Setting up MLP Pruner ---")
+    logger.info("--- 3. Setting up Pruner ---")
     pruner = setup_pruner(config, mllm)
     # Optional: Train the pruner if a training mechanism is implemented
     # pruner = train_pruner(config, pruner, data_loader, mllm)
-    logger.info("MLP Pruner is ready.")
+    logger.info("Pruner is ready.")
 
-    # Note: There is no explicit agent training loop like in the RL version.
+    
     # The pruner is either pre-defined or potentially trained separately.
 
     # 4. Evaluate the Pruner (This is the main execution step now)
