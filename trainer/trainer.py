@@ -1,44 +1,41 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-#from ..pruner.mlp_pruner import MLPPruner
-from pruner.mlp_pruner import MLPPruner # 绝对导入
+# from ..pruner.mlp_pruner import MLPPruner # Remove or comment out if not needed for this run
+from ..pruner.random_pruner import RandomPruner # Import RandomPruner
+# from ..pruner.mlp_pruner import MLPPruner # Keep if you want to switch back later
 import numpy as np
 import logging
 
-# A simple training loop for the MLP pruner could go here if needed.
-# However, MLPPruner doesn't inherently require training on a specific task.
-# The 'training' could involve fine-tuning based on a proxy loss (e.g., based on model confidence change)
-# or just optimizing based on relevance scores. For now, we'll assume the MLP is initialized
-# and used directly, potentially with some form of scoring mechanism based on the model itself.
-
 def setup_pruner(config, mllm):
+    """
+    Initializes the Random-based pruner.
+    """
+    print("--- Setting up Random Pruner ---")
+    pruner = RandomPruner(mllm, config)
+    print("Random Pruner initialized.")
+    return pruner
+
+# Keep the MLP pruner setup function for potential future use
+def setup_mlp_pruner(config, mllm):
     """
     Initializes the MLP-based pruner.
     """
     print("--- Setting up MLP Pruner ---")
+    from ..pruner.mlp_pruner import MLPPruner
     pruner = MLPPruner(mllm, config)
-    # If you had specific training data for the pruner, you would load it here
-    # and potentially call a training function on pruner.model
     print("MLP Pruner initialized.")
     return pruner
 
 def train_pruner(config, pruner, data_loader, mllm):
     """
     Placeholder for potential training of the pruner.
-    The pruner's MLP could be trained to predict importance scores that correlate
-    with model performance preservation or efficiency gains.
-    This is a complex step and often requires a proxy objective.
-    For this example, we'll assume the pruner is used as-is or trained separately.
+    Training is not applicable for RandomPruner.
     """
-    print("--- Training MLP Pruner (Placeholder) ---")
-    # Example: Train on a dataset where importance is defined by gradient magnitudes
-    # or by the impact of removing a token on model output entropy/confidence.
-    # This is a non-trivial task and depends heavily on the desired outcome.
-    # For now, we just return the initialized pruner.
-    print("MLP Pruner training skipped (or assumed pre-trained).")
+    print("--- Training Pruner (Placeholder) ---")
+    if isinstance(pruner, RandomPruner):
+        print("RandomPruner does not require training. Skipping.")
+    else:
+        print("Assuming other pruners (e.g., MLP) may require training (not implemented here).")
+    print("Pruner setup/training skipped (or assumed pre-trained).")
     return pruner
-
-# The main training function from the original RL version is not needed here,
-# as we are not training an RL agent. The 'training' happens during the setup
-# or potentially during the evaluation/selection of the MLP's parameters.
