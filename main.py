@@ -1,3 +1,5 @@
+# main.py
+
 import os
 import torch
 import torch.nn as nn
@@ -8,7 +10,8 @@ import logging
 import config
 from data.base_loader import get_data_loader
 from model.base_mllm import get_mllm
-from trainer.trainer import setup_pruner, train_pruner # Import pruner setup/training
+
+from trainer.trainer import setup_pruner, train_pruner # 假设 trainer.trainer.py 中的 setup_pruner 现在设置 RandomPruner
 from evaluator.evaluator import evaluate_performance
 
 def setup_logger():
@@ -33,7 +36,7 @@ def setup_logger():
 
 def main():
     """
-    Main function to run the MLP-based token pruning pipeline.
+    Main function to run the Random-based token pruning pipeline.
     """
     # 0. Setup Logger
     logger = setup_logger()
@@ -49,15 +52,13 @@ def main():
     mllm = get_mllm(config)
     logger.info(f"MLLM '{config.MODEL_ID}' initialized.")
 
-    # 3. Setup MLP Pruner (Replaces RL Environment and Policy setup)
-    logger.info("--- 3. Setting up Pruner ---")
-    pruner = setup_pruner(config, mllm)
-    # Optional: Train the pruner if a training mechanism is implemented
+    # 3. Setup Pruner
+    logger.info("--- 3. Setting up Random Pruner ---")
+   
+    pruner = setup_pruner(config, mllm) # This now calls the function that sets up RandomPruner
+    # Optional: Train the pruner if a training mechanism is implemented for other types
     # pruner = train_pruner(config, pruner, data_loader, mllm)
-    logger.info("Pruner is ready.")
-
-    
-    # The pruner is either pre-defined or potentially trained separately.
+    logger.info("Random Pruner is ready.")
 
     # 4. Evaluate the Pruner (This is the main execution step now)
     logger.info("--- 4. Starting Pruner Evaluation ---")
@@ -72,7 +73,7 @@ def main():
     config.EVAL_MODE = "budget"
     evaluate_performance(pruner, config, mllm, data_loader, logger)
 
-    logger.info("Pruner evaluation finished.")
+    logger.info("Random Pruner evaluation finished.")
 
 if __name__ == "__main__":
     main()
