@@ -58,16 +58,11 @@ class Qwen2_5VL(BaseMLLM):
             "current_num_patches": current_num_patches
         }
 
-    def generate_answer(self, final_embeddings, attention_mask, max_new_tokens=20):
+     def generate_answer(self, final_embeddings, attention_mask, max_new_tokens=20):
         with torch.no_grad():
             output_ids = self.model.generate(
                 inputs_embeds=final_embeddings,
                 attention_mask=attention_mask,
-                max_new_tokens=max_new_tokens,
-                pad_token_id=self.processor.tokenizer.eos_token_id # Ensure padding uses EOS token
+                max_new_tokens=max_new_tokens
             )
-        # Extract only the generated part (after input sequence)
-        input_len = final_embeddings.shape[1]
-        generated_ids = output_ids[:, input_len:]
-        generated_text = self.processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
-        return generated_text
+        return self.processor.batch_decode(output_ids, skip_special_tokens=True)[0].strip()
