@@ -62,6 +62,12 @@ def main():
 
     # 4. Evaluate the Pruner (This is the main execution step now)
     logger.info("--- 4. Starting Pruner Evaluation ---")
+
+    # --- 首先评估无剪枝情况 ---
+    logger.info("--- Evaluating WITHOUT Pruning (EVAL_MODE='none') ---")
+    config.EVAL_MODE = "none"
+    evaluate_performance(pruner, config, mllm, data_loader, logger)
+    
     # Evaluate in different modes
     config.EVAL_MODE = "none"
     logger.info("Skipping evaluation for EVAL_MODE='none'.")
@@ -70,8 +76,8 @@ def main():
     config.EVAL_MODE = "full"
     evaluate_performance(pruner, config, mllm, data_loader, logger)
 
-    config.EVAL_MODE = "budget"
-    evaluate_performance(pruner, config, mllm, data_loader, logger)
+    #config.EVAL_MODE = "budget"
+    #evaluate_performance(pruner, config, mllm, data_loader, logger)
 
     logger.info("Random Pruner evaluation finished.")
 
