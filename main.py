@@ -17,7 +17,7 @@ from evaluator.evaluator import evaluate_performance
 def setup_logger():
     """Sets up the logger to write to a file and the console."""
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 
     # Create handlers
     file_handler = logging.FileHandler(config.LOG_FILE)
