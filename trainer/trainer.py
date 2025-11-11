@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
-from ..pruner.random_pruner import RandomPruner
-from ..pruner.mlp_pruner import MLPPruner
-from ..pruner.div_pruner import DivPruner # Import DivPruner
-import numpy as np
-import logging
+
+from pruner.random_pruner import RandomPruner
+from pruner.mlp_pruner import MLPPruner
+from pruner.div_pruner import DivPruner
 
 def setup_pruner(config, mllm):
     """
