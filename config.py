@@ -17,8 +17,9 @@ LOG_FILE = os.path.join(LOG_DIR, f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')
 
 # --- MLLM and Dataset Configuration ---
 MODEL_ID = "Qwen/Qwen2.5-VL-3B-Instruct"
-DATASET_NAME = "lmms-lab/MME"
-DATASET_SPLIT = "test[:1000]" # Using a subset for quick testing
+# ScreenSpot-Pro bbox 任务
+DATASET_NAME = "Voxel51/ScreenSpot-Pro"
+DATASET_SPLIT = "train"  # ScreenSpot-Pro 通常只提供 train/validation 等划分
 TRAIN_TEST_SPLIT_RATIO = 0.8
 
 # --- Pruning Settings ---
@@ -39,3 +40,4 @@ DIV_PRUNE_IMPORTANCE_WEIGHT = 0.5 # Adjust this value to tune the trade-off
 # --- Evaluation Settings ---
 EVAL_MODE = "full"  # 可选值："full", "budget", "none"
 EVAL_BATCH_SIZE = 4 # Batch size for evaluation
+BBOX_SUCCESS_IOU = 0.5  # IoU threshold for considering bbox prediction correct

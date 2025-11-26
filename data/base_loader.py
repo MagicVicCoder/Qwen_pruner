@@ -39,8 +39,17 @@ def get_data_loader(config):
             split=config.DATASET_SPLIT,
             split_ratio=config.TRAIN_TEST_SPLIT_RATIO
         )
-    # Add other datasets here
-    # elif config.DATASET_NAME == "another-dataset":
-    #     return AnotherDataLoader(...)
+    elif config.DATASET_NAME in {"Screen-Pro", "ScreenSpot-Pro", "Voxel51/ScreenSpot-Pro"}:
+        from .screen_pro_loader import ScreenProDataLoader
+        resolved_name = (
+            "Voxel51/ScreenSpot-Pro"
+            if config.DATASET_NAME in {"Screen-Pro", "ScreenSpot-Pro"}
+            else config.DATASET_NAME
+        )
+        return ScreenProDataLoader(
+            name=resolved_name,
+            split=config.DATASET_SPLIT,
+            split_ratio=config.TRAIN_TEST_SPLIT_RATIO
+        )
     else:
         raise ValueError(f"Unknown dataset: {config.DATASET_NAME}")

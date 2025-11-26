@@ -1,7 +1,11 @@
+import logging
+import re
+from typing import Optional, Sequence, Tuple
+
+import numpy as np
 import torch
 from tqdm import tqdm
-import logging
-import numpy as np
+
 from trainer.trainer import setup_pruner
 
 def evaluate_performance(pruner, config, mllm, data_loader, logger):
@@ -32,6 +36,9 @@ def evaluate_performance(pruner, config, mllm, data_loader, logger):
 
     # --- 用于计算准确率和压缩率的列表 ---
     accuracies = []
+    bbox_ious = []
+    text_eval_count = 0
+    bbox_eval_count = 0
     # Compression ratio is 1.0 (no compression) when EVAL_MODE is "none"
     compression_ratios = []
 
@@ -45,10 +52,15 @@ def evaluate_performance(pruner, config, mllm, data_loader, logger):
 
         for sample in batch_samples:
             try:
-                # Assuming sample has 'image', 'question', and 'answer' keys
+                # Assuming sample has 'image', 'question', and optional 'answer' / 'bbox' keys
                 image = sample['image']
                 question = sample['question']
-                gt_answer = sample['answer'] # 获取 Ground Truth 答案
+                gt_answer = sample.get('answer')  # 获取 Ground Truth 文本答案（可选）
+                gt_bbox = sample.get("bbox")      # GUI 定位任务的坐标答案（可选）
+
+                if gt_bbox is None and gt_answer is None:
+                    logger.warning("Sample missing both bbox and textual answer. Skipping.")
+                    continue
 
                 # Get components from the MLLM
                 components = mllm.get_components_for_env(image, question)
@@ -97,13 +109,33 @@ def evaluate_performance(pruner, config, mllm, data_loader, logger):
                 # ---
 
                 # 计算准确率
-                is_match = gt_answer.lower() in generated_answer.lower()
-                logger.debug(f"Is GT in Generated? {is_match}")
-                accuracy = 1.0 if is_match else 0.0
-                logger.debug(f"Calculated Accuracy for this sample: {accuracy}\n")
-                # ---
+                if gt_bbox is not None:
+                    # ScreenSpot-Pro: 用 bbox IoU 评估
+                    bbox_eval_count += 1
+                    pred_bbox = _parse_bbox_from_text(generated_answer)
+                    if pred_bbox is None:
+                        logger.debug("Failed to parse bbox from generated answer.")
+                        iou = 0.0
+                        is_match = False
+                    else:
+                        iou = _compute_iou(pred_bbox, tuple(gt_bbox))
+                        is_match = iou >= getattr(config, "BBOX_SUCCESS_IOU", 0.5)
+                        logger.debug(f"Pred BBox: {pred_bbox}, GT BBox: {gt_bbox}, IoU: {iou:.4f}")
+                    bbox_ious.append(iou)
+                    accuracy = 1.0 if is_match else 0.0
+                elif gt_answer is not None:
+                    # 兼容原来的文本 QA（如 MME）
+                    text_eval_count += 1
+                    is_match = gt_answer.lower() in generated_answer.lower()
+                    logger.debug(f"Is GT in Generated? {is_match}")
+                    accuracy = 1.0 if is_match else 0.0
+                else:
+                    # 按理不会到这里，防御性代码
+                    continue
 
-                accuracies.append(accuracy) # 将本次样本的准确率加入列表
+                logger.debug(f"Calculated Accuracy for this sample: {accuracy}\n")
+
+                accuracies.append(accuracy)  # 将本次样本的准确率加入列表
                 compression_ratios.append(compression_ratio) # 将本次样本的压缩率加入列表
 
                 # 计数调试 ---
@@ -135,8 +167,63 @@ def evaluate_performance(pruner, config, mllm, data_loader, logger):
         logger.info(f"Total Samples Attempted: {len(eval_samples)}")
         logger.info(f"Successfully Evaluated Samples: {len(accuracies)}")
         logger.info(f"Average Accuracy: {avg_accuracy:.4f}")
+        if bbox_ious:
+            logger.info(f"Average IoU (bbox samples): {np.mean(bbox_ious):.4f}")
+        logger.info(f"Textual samples evaluated: {text_eval_count}")
+        logger.info(f"BBox samples evaluated: {bbox_eval_count}")
         logger.info(f"Average Compression Ratio: {avg_compression_ratio:.4f}")
         logger.info("--------------------------")
     else:
         logger.warning(f"No samples were successfully evaluated for {config.EVAL_MODE} mode.")
         logger.info("--------------------------")
+
+
+def _parse_bbox_from_text(text: str) -> Optional[Tuple[float, float, float, float]]:
+    """
+    从模型生成的文本中解析出 [x, y, w, h] 四个坐标值。
+    要求至少出现 4 个数字，取前四个。
+    """
+    if not text:
+        return None
+
+    numbers = re.findall(r"-?\d+(?:\.\d+)?", text)
+    if len(numbers) < 4:
+        return None
+
+    try:
+        coords = tuple(float(num) for num in numbers[:4])
+    except ValueError:
+        return None
+
+    return coords
+
+
+def _compute_iou(box_a: Sequence[float], box_b: Sequence[float]) -> float:
+    """
+    计算两个 bbox（x, y, w, h）的 IoU。
+    """
+    ax, ay, aw, ah = box_a
+    bx, by, bw, bh = box_b
+
+    a_x2 = ax + aw
+    a_y2 = ay + ah
+    b_x2 = bx + bw
+    b_y2 = by + bh
+
+    inter_left = max(ax, bx)
+    inter_top = max(ay, by)
+    inter_right = min(a_x2, b_x2)
+    inter_bottom = min(a_y2, b_y2)
+
+    if inter_right <= inter_left or inter_bottom <= inter_top:
+        return 0.0
+
+    inter_area = (inter_right - inter_left) * (inter_bottom - inter_top)
+    area_a = aw * ah
+    area_b = bw * bh
+
+    denom = area_a + area_b - inter_area
+    if denom <= 0:
+        return 0.0
+
+    return inter_area / denom
