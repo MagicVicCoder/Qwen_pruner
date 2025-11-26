@@ -1,0 +1,37 @@
+2025-11-11 23:24:31,618 - INFO - --- 0. Logger Initialized ---
+2025-11-11 23:24:31,618 - INFO - --- 1. Initializing Data Loader ---
+2025-11-11 23:24:45,590 - INFO - Data loader for 'lmms-lab/MME' initialized.
+2025-11-11 23:24:45,590 - INFO - --- 2. Initializing MLLM ---
+2025-11-11 23:25:05,021 - INFO - MLLM 'Qwen/Qwen2.5-VL-3B-Instruct' initialized.
+2025-11-11 23:25:05,021 - INFO - --- 3. Setting up Random Pruner ---
+2025-11-11 23:25:05,021 - INFO - Random Pruner is ready.
+2025-11-11 23:25:05,021 - INFO - --- 4. Starting Pruner Evaluation ---
+2025-11-11 23:25:05,021 - INFO - --- Evaluating WITHOUT Pruning (EVAL_MODE='none') ---
+2025-11-11 23:25:05,022 - INFO - Starting evaluation in mode: none
+2025-11-11 23:25:05,022 - INFO - Evaluating on 200 samples.
+2025-11-11 23:27:12,548 - INFO - --- Debug Counts for none mode ---
+2025-11-11 23:27:12,548 - INFO - Total Samples Processed: 200
+2025-11-11 23:27:12,549 - INFO - Matches Found (GT in Generated): 0
+2025-11-11 23:27:12,549 - INFO - No Matches Found: 200
+2025-11-11 23:27:12,549 - INFO - ---------------------
+2025-11-11 23:27:12,549 - INFO - Evaluation Mode: none
+2025-11-11 23:27:12,549 - INFO - Total Samples Attempted: 200
+2025-11-11 23:27:12,549 - INFO - Successfully Evaluated Samples: 200
+2025-11-11 23:27:12,549 - INFO - Average Accuracy: 0.0000
+2025-11-11 23:27:12,549 - INFO - Average Compression Ratio: 1.0000
+2025-11-11 23:27:12,549 - INFO - --------------------------
+2025-11-11 23:27:12,549 - INFO - Skipping evaluation for EVAL_MODE='none'.
+2025-11-11 23:27:12,549 - INFO - Starting evaluation in mode: full
+2025-11-11 23:27:12,549 - INFO - Evaluating on 200 samples.
+2025-11-11 23:29:07,922 - INFO - --- Debug Counts for full mode ---
+2025-11-11 23:29:07,922 - INFO - Total Samples Processed: 200
+2025-11-11 23:29:07,922 - INFO - Matches Found (GT in Generated): 0
+2025-11-11 23:29:07,922 - INFO - No Matches Found: 200
+2025-11-11 23:29:07,922 - INFO - ---------------------
+2025-11-11 23:29:07,922 - INFO - Evaluation Mode: full
+2025-11-11 23:29:07,922 - INFO - Total Samples Attempted: 200
+2025-11-11 23:29:07,922 - INFO - Successfully Evaluated Samples: 200
+2025-11-11 23:29:07,922 - INFO - Average Accuracy: 0.0000
+2025-11-11 23:29:07,922 - INFO - Average Compression Ratio: 0.4994
+2025-11-11 23:29:07,922 - INFO - --------------------------
+2025-11-11 23:29:07,923 - INFO - Random Pruner evaluation finished.

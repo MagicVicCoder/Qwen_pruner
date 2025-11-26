@@ -4,7 +4,7 @@ from datetime import datetime
 
 # --- Global Settings ---
 # Use a cache directory within your project or home directory
-os.environ["HF_HOME"] = os.path.expanduser("~/Vic/tokenprune/data/huggingface_cache")
+os.environ["HF_HOME"] = os.path.expanduser("~/MagicVic/data/huggingface_cache")
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["CUDA_VISIBLE_DEVICES"] = "3,5,6"
 
@@ -22,7 +22,7 @@ DATASET_SPLIT = "test[:1000]" # Using a subset for quick testing
 TRAIN_TEST_SPLIT_RATIO = 0.8
 
 # --- Pruning Settings ---
-PRUNING_TARGET_RATIO = 0.5  # Target ratio of tokens to keep after pruning (e.g., 0.5 means prune 50%)
+PRUNING_TARGET_RATIO = 0.1  # Target ratio of tokens to keep after pruning (e.g., 0.5 means prune 50%)
 
 # --- MLP Pruner Settings ---
 PRUNING_MLP_HIDDEN_DIM = 256 # Hidden dimension for the MLP used to predict pruning scores

@@ -11,14 +11,14 @@ import config
 from data.base_loader import get_data_loader
 from model.base_mllm import get_mllm
 
-from trainer.trainer import setup_pruner, train_pruner # 假设 trainer.trainer.py 中的 setup_pruner 现在设置 RandomPruner
+from trainer.trainer import setup_pruner, train_pruner # 在setup_pruner处修改选用的剪枝算法
 from evaluator.evaluator import evaluate_performance
 
 def setup_logger():
     """Sets up the logger to write to a file and the console."""
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
-
+    #logger.setLevel(logging.DEBUG)
     # Create handlers
     file_handler = logging.FileHandler(config.LOG_FILE)
     console_handler = logging.StreamHandler()
@@ -69,9 +69,8 @@ def main():
     evaluate_performance(pruner, config, mllm, data_loader, logger)
     
     # Evaluate in different modes
-    config.EVAL_MODE = "none"
-    logger.info("Skipping evaluation for EVAL_MODE='none'.")
-    # evaluate_performance(pruner, config, mllm, data_loader, logger)
+    #logger.info("Skipping evaluation for EVAL_MODE='none'.")
+    
 
     config.EVAL_MODE = "full"
     evaluate_performance(pruner, config, mllm, data_loader, logger)

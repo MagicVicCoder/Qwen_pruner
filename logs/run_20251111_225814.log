@@ -1,0 +1,4 @@
+2025-11-11 22:58:14,947 - INFO - --- 0. Logger Initialized ---
+2025-11-11 22:58:14,947 - INFO - --- 1. Initializing Data Loader ---
+2025-11-11 22:58:27,807 - INFO - Data loader for 'lmms-lab/MME' initialized.
+2025-11-11 22:58:27,807 - INFO - --- 2. Initializing MLLM ---
