@@ -4,7 +4,7 @@ from datetime import datetime
 
 # --- Global Settings ---
 # Use a cache directory within your project or home directory
-os.environ["HF_HOME"] = os.path.expanduser("~/Vic/tokenprune/data/huggingface_cache")
+os.environ["HF_HOME"] = os.path.expanduser("~/MagicVic/data/huggingface_cache")
 os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["CUDA_VISIBLE_DEVICES"] = "3,5,6"
 
