@@ -89,30 +89,53 @@ class ScreenProDataLoader(BaseDataLoader):
         total_count = len(all_samples)
         print(f"Total samples in dataset: {total_count}")
         
+        # 先详细检查前3个样本的完整结构
+        print("\n" + "=" * 80)
+        print("=== RAW SAMPLE STRUCTURE INSPECTION ===")
+        print("=" * 80)
+        for i in range(min(3, total_count)):
+            raw_sample = all_samples[i]
+            print(f"\n{'='*80}")
+            print(f"SAMPLE {i} - Complete Structure:")
+            print(f"{'='*80}")
+            print(f"All keys: {list(raw_sample.keys())}")
+            print(f"\nDetailed field inspection:")
+            for key in sorted(raw_sample.keys()):
+                value = raw_sample[key]
+                value_type = type(value).__name__
+                
+                # 打印字段信息
+                if isinstance(value, (list, tuple)):
+                    print(f"  {key}: {value_type}[{len(value)}]")
+                    if len(value) > 0:
+                        print(f"    First element: {value[0]}")
+                        if len(value) > 1:
+                            print(f"    Second element: {value[1]}")
+                        if len(value) > 2:
+                            print(f"    ... (total {len(value)} elements)")
+                elif isinstance(value, dict):
+                    print(f"  {key}: {value_type} with keys: {list(value.keys())}")
+                    # 打印字典的前几个键值对
+                    for k, v in list(value.items())[:5]:
+                        print(f"    {k}: {type(v).__name__} = {v}")
+                    if len(value) > 5:
+                        print(f"    ... (total {len(value)} keys)")
+                elif isinstance(value, str):
+                    print(f"  {key}: {value_type} (length {len(value)})")
+                    print(f"    Content: {value[:200]}{'...' if len(value) > 200 else ''}")
+                elif hasattr(value, 'shape'):  # numpy array or tensor
+                    print(f"  {key}: {value_type} with shape {value.shape}")
+                else:
+                    print(f"  {key}: {value_type} = {value}")
+        
+        print("\n" + "=" * 80)
+        print("=== END OF RAW SAMPLE INSPECTION ===")
+        print("=" * 80)
+        print("\nNow processing samples for normalization...")
+        
         normalized_samples = []
         skipped_count = 0
         skip_reasons = {"no_image": 0, "no_bbox": 0, "no_question": 0}
-        
-        # 先检查前几个样本的结构
-        print("\n=== Inspecting first few samples ===")
-        for i in range(min(3, total_count)):
-            raw_sample = all_samples[i]
-            print(f"\nSample {i} keys: {list(raw_sample.keys())}")
-            # 检查所有可能的bbox相关字段
-            print("  Looking for bbox-related fields:")
-            for key in raw_sample.keys():
-                key_lower = key.lower()
-                if any(term in key_lower for term in ["bbox", "box", "coord", "bound", "rect", "region", "area", "location"]):
-                    value = raw_sample[key]
-                    print(f"    {key}: {type(value).__name__} = {value}")
-            # 检查关键字段
-            for key in ["image", "instruction", "screenshot", "query", "prompt"]:
-                if key in raw_sample:
-                    value = raw_sample[key]
-                    if isinstance(value, (list, tuple, dict)):
-                        print(f"  {key}: {type(value).__name__} with length/shape {len(value) if hasattr(value, '__len__') else 'N/A'}")
-                    else:
-                        print(f"  {key}: {type(value).__name__} = {str(value)[:100]}")
         
         print("\n=== Processing all samples ===")
         for idx, raw_sample in enumerate(all_samples):
@@ -375,5 +398,4 @@ class ScreenProDataLoader(BaseDataLoader):
         except Exception as e:
             print(f"Warning: Error during cache cleanup: {e}")
             # 不阻止继续执行
-
 
