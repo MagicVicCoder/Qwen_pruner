@@ -398,4 +398,3 @@ class ScreenProDataLoader(BaseDataLoader):
         except Exception as e:
             print(f"Warning: Error during cache cleanup: {e}")
             # 不阻止继续执行
-
