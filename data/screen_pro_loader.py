@@ -40,6 +40,7 @@ class ScreenProDataLoader(BaseDataLoader):
             print(f"Cache exists: No - will download from scratch")
         
         max_retries = 2
+        dataset = None
         for attempt in range(max_retries):
             try:
                 # 第一次尝试：使用默认模式（重用缓存）
@@ -48,6 +49,27 @@ class ScreenProDataLoader(BaseDataLoader):
                     print(f"Attempt {attempt + 1}: Using download_mode='{download_mode}'")
                 else:
                     print(f"Attempt {attempt + 1}: Using download_mode='{download_mode}' (force redownload)")
+                
+                # 先加载整个数据集（不指定split）来查看可用的splits
+                if attempt == 0:
+                    print("Checking available splits and features...")
+                    try:
+                        full_dataset = load_dataset(self.name, download_mode=download_mode)
+                        print(f"Available splits: {list(full_dataset.keys())}")
+                        # 检查每个split的features
+                        for split_name in full_dataset.keys():
+                            split_data = full_dataset[split_name]
+                            print(f"\nSplit '{split_name}' features: {split_data.features if hasattr(split_data, 'features') else 'N/A'}")
+                            if hasattr(split_data, 'features') and hasattr(split_data.features, 'keys'):
+                                print(f"  Feature names: {list(split_data.features.keys())}")
+                            # 检查第一个样本
+                            if len(split_data) > 0:
+                                first_sample = split_data[0]
+                                print(f"  First sample keys: {list(first_sample.keys())}")
+                    except Exception as e:
+                        print(f"Warning: Could not inspect full dataset: {e}")
+                
+                # 加载指定的split
                 dataset = load_dataset(self.name, split=self.split, download_mode=download_mode)
                 print("Dataset loaded successfully!")
                 break  # 成功加载，退出循环
@@ -84,6 +106,17 @@ class ScreenProDataLoader(BaseDataLoader):
                 raise
 
         # 转换为列表，避免迭代器只能遍历一次的问题
+        # 先检查数据集的 features/schema
+        print("\n" + "=" * 80)
+        print("=== DATASET FEATURES/SCHEMA ===")
+        print("=" * 80)
+        if hasattr(dataset, 'features'):
+            print(f"Dataset features: {dataset.features}")
+            print(f"Feature names: {list(dataset.features.keys()) if hasattr(dataset.features, 'keys') else 'N/A'}")
+        if hasattr(dataset, 'info'):
+            print(f"Dataset info: {dataset.info}")
+        print("=" * 80)
+        
         print("Converting dataset to list...")
         all_samples = list(dataset)
         total_count = len(all_samples)
@@ -398,3 +431,5 @@ class ScreenProDataLoader(BaseDataLoader):
         except Exception as e:
             print(f"Warning: Error during cache cleanup: {e}")
             # 不阻止继续执行
+
+
