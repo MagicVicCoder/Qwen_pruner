@@ -22,7 +22,11 @@ class ScreenProDataLoader(BaseDataLoader):
     _QUESTION_KEYS = ("instruction", "question", "prompt", "query", "caption")
     _ANSWER_KEYS = ("answer", "response", "label", "target_description", "description")
     _IMAGE_PATH_KEYS = ("image_path", "screenshot_path")
-    _BBOX_KEYS = ("bbox", "target_bbox", "bbox_xywh")
+    _BBOX_KEYS = (
+        "bbox", "target_bbox", "bbox_xywh", "bounding_box", "boundingbox",
+        "box", "target_box", "coordinates", "coords", "rect", "rectangle",
+        "region", "area", "location", "target_location"
+    )
 
     def _load_and_split_data(self):
         print(f"Loading dataset: {self.name}")
@@ -94,8 +98,15 @@ class ScreenProDataLoader(BaseDataLoader):
         for i in range(min(3, total_count)):
             raw_sample = all_samples[i]
             print(f"\nSample {i} keys: {list(raw_sample.keys())}")
+            # 检查所有可能的bbox相关字段
+            print("  Looking for bbox-related fields:")
+            for key in raw_sample.keys():
+                key_lower = key.lower()
+                if any(term in key_lower for term in ["bbox", "box", "coord", "bound", "rect", "region", "area", "location"]):
+                    value = raw_sample[key]
+                    print(f"    {key}: {type(value).__name__} = {value}")
             # 检查关键字段
-            for key in ["image", "instruction", "bbox", "target_bbox", "screenshot", "query", "prompt"]:
+            for key in ["image", "instruction", "screenshot", "query", "prompt"]:
                 if key in raw_sample:
                     value = raw_sample[key]
                     if isinstance(value, (list, tuple, dict)):
@@ -212,23 +223,38 @@ class ScreenProDataLoader(BaseDataLoader):
         return None
 
     def _extract_bbox(self, sample: Dict[str, Any]) -> Optional[Tuple[float, float, float, float]]:
-        # 常见形式：字段本身是长度为 4 的 list/tuple，或 dict 包含 x,y,w,h / width,height
+        # 策略1: 直接查找已知的bbox字段名
         for key in self._BBOX_KEYS:
             bbox_value = sample.get(key)
             parsed = self._parse_bbox_value(bbox_value)
             if parsed is not None:
                 return parsed
 
-        # 退路：单独的标量字段
+        # 策略2: 模糊匹配字段名（包含bbox/box/coord等关键词）
+        for key in sample.keys():
+            key_lower = key.lower()
+            if any(term in key_lower for term in ["bbox", "box", "coord", "bound", "rect", "region"]):
+                bbox_value = sample.get(key)
+                parsed = self._parse_bbox_value(bbox_value)
+                if parsed is not None:
+                    return parsed
+
+        # 策略3: 单独的标量字段
         candidates = (
             ("x", "y", "w", "h"),
             ("left", "top", "width", "height"),
+            ("x1", "y1", "x2", "y2"),  # 支持 [x1, y1, x2, y2] 格式
         )
         for keys in candidates:
             try:
-                vals = [float(sample[k]) for k in keys]
-                if len(vals) == 4:
-                    return tuple(vals)  # type: ignore[return-value]
+                if all(k in sample for k in keys):
+                    vals = [float(sample[k]) for k in keys]
+                    if len(vals) == 4:
+                        # 如果是 [x1, y1, x2, y2] 格式，转换为 [x, y, w, h]
+                        if keys == ("x1", "y1", "x2", "y2"):
+                            x1, y1, x2, y2 = vals
+                            return (x1, y1, x2 - x1, y2 - y1)
+                        return tuple(vals)  # type: ignore[return-value]
             except (KeyError, TypeError, ValueError):
                 continue
 
@@ -240,24 +266,48 @@ class ScreenProDataLoader(BaseDataLoader):
         if value is None:
             return None
 
+        # 处理字典格式
         if isinstance(value, dict):
-            x = value.get("x")
-            y = value.get("y")
-            w = value.get("w", value.get("width"))
-            h = value.get("h", value.get("height"))
+            # 尝试多种可能的键名组合
+            x = value.get("x") or value.get("x1") or value.get("left") or value.get("x_min")
+            y = value.get("y") or value.get("y1") or value.get("top") or value.get("y_min")
+            w = value.get("w") or value.get("width")
+            h = value.get("h") or value.get("height")
+            
+            # 如果有 x2, y2，计算 width 和 height
+            if w is None and "x2" in value:
+                x2 = value.get("x2") or value.get("right") or value.get("x_max")
+                if x is not None and x2 is not None:
+                    w = float(x2) - float(x)
+            if h is None and "y2" in value:
+                y2 = value.get("y2") or value.get("bottom") or value.get("y_max")
+                if y is not None and y2 is not None:
+                    h = float(y2) - float(y)
+            
             try:
-                return float(x), float(y), float(w), float(h)
+                if x is not None and y is not None and w is not None and h is not None:
+                    return float(x), float(y), float(w), float(h)
             except (TypeError, ValueError):
-                return None
+                pass
+            return None
 
+        # 处理列表/元组格式
         if isinstance(value, (list, tuple)):
             seq: Sequence[Any] = value
-            if len(seq) != 4:
-                return None
-            try:
-                return tuple(float(v) for v in seq)  # type: ignore[return-value]
-            except (TypeError, ValueError):
-                return None
+            if len(seq) == 4:
+                try:
+                    coords = tuple(float(v) for v in seq)  # type: ignore[return-value]
+                    # 假设是 [x, y, w, h] 格式，直接返回
+                    return coords
+                except (TypeError, ValueError):
+                    return None
+            elif len(seq) >= 4:
+                # 可能是嵌套结构，尝试提取前4个数字
+                try:
+                    nums = [float(v) for v in seq[:4]]
+                    return tuple(nums)  # type: ignore[return-value]
+                except (TypeError, ValueError):
+                    return None
 
         return None
 
